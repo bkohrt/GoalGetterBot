@@ -10,10 +10,11 @@ class ResultCalculator
   end
   
   def matchResult team1, team2
+    team1 = verifyName team1
+    team2 = verifyName team2
     team1_scores = teamScores team1
     team2_scores = teamScores team2
     power_diff = clubDistance(team1_scores,team2_scores)
-    puts power_diff
     offence_value_team1 = offenceValue team2_scores[:defence], team1_scores[:offence]
     offence_value_team2 = offenceValue team1_scores[:defence], team2_scores[:offence]
     result = result power_diff, offence_value_team1, offence_value_team2
@@ -107,5 +108,13 @@ class ResultCalculator
     else
       offence_value_team1 > offence_value_team2 ? [offence_value_team1,offence_value_team1] : [offence_value_team2,offence_value_team2]
     end
+  end
+  
+  def verifyName name
+    return name if @club_comunio_ids.has_key?(name)
+    @club_comunio_ids.keys.each do |club|
+      return club if club.include?(name) || club.include?(name[-6..-1])
+    end
+    raise "#{name} konnte nicht gefunden werden."
   end
 end
