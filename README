@@ -1,0 +1,3 @@
+Der GoalGetter berechnet die Ergebnisse anhand des Marktwertes und der Punkte der Spieler.
+Die Punkte resultieren aus den Noten, die Sportal.de für die Spieler pro Spieltag vergibt. Tore und Vorlagen werden ebenso in die Punktevergabe einbezogen.
+Die Daten werden vom Comunio Webservice entnommen. (http://www.comunio.de/soapservice.php?wsdl)
