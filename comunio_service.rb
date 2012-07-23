@@ -1,3 +1,5 @@
+#encoding: utf-8
+
 require "savon"
 
 class ComunioService 
@@ -10,7 +12,7 @@ class ComunioService
   def clubs
     begin
       response = @client.request :getclubs
-      response ? response.to_hash[:getclubs_response][:return][:item] : nil
+      response.success? ? response.to_hash[:getclubs_response][:return][:item] : nil
     rescue
       nil
     end
@@ -21,8 +23,9 @@ class ComunioService
       response = @client.request :getplayersbyclubid do
         soap.body = {id: id}
       end
-      response ? response.to_hash[:getplayersbyclubid_response][:return][:item] : nil
+      response.success? ? response.to_hash[:getplayersbyclubid_response][:return][:item] : nil
     rescue
+      puts "Üngültige Vereins ID"
       nil
     end
   end
@@ -32,17 +35,14 @@ class ComunioService
       response = @client.request :getplayerbyid do
         soap.body = {id: id}
       end
-      if response
-        hash = response.to_hash[:getplayerbyid_response][:return][:item]
-        player = Hash.new
-        hash.each do | attr|
-          player[attr[:key]] = attr[:value]
-        end
+      return nil unless response.success?
+      response_hash = response.to_hash[:getplayerbyid_response][:return][:item]
+      response_hash.inject(Hash.new) do |player, attr|
+        player[attr[:key]] = attr[:value]
         player
-      else
-        nil
       end
     rescue
+      puts "Ungültige Spieler ID"
       nil
     end
   end

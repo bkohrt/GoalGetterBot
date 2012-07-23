@@ -5,7 +5,7 @@ class ResultCalculator
   def initialize
     @service = ComunioService.new
     clubs = @service.clubs
-    @club_comunio_ids = createClubAssignment clubs
+    @club_comunio_ids_map = createClubAssignment clubs
     @norm = calculateNorm clubs
   end
   
@@ -14,37 +14,33 @@ class ResultCalculator
     team2 = verifyName team2
     team1_scores = teamScores team1
     team2_scores = teamScores team2
-    power_diff = clubDistance(team1_scores,team2_scores)
+    power_diff = clubDistance team1_scores, team2_scores
     offence_value_team1 = offenceValue team2_scores[:defence], team1_scores[:offence]
     offence_value_team2 = offenceValue team1_scores[:defence], team2_scores[:offence]
     result = result power_diff, offence_value_team1, offence_value_team2
   end
   
   def createClubAssignment clubsInfo
-    club_comunio_ids = Hash.new
-    clubsInfo.each do |club|
-      club_comunio_ids[club[:name]] = club[:id]
-    end
-    club_comunio_ids
+    clubsInfo.inject(Hash.new) do |club_comunio_ids_map, club|
+      club_comunio_ids_map[club[:name]] = club[:id]
+      club_comunio_ids_map
+    end    
   end
   
   def teamScores teamName
-    comunioId = @club_comunio_ids[teamName]
+    comunioId = @club_comunio_ids_map[teamName]
     players = @service.playersOfClub comunioId
     scores = {:points => 0, :quote => 0, :defence => 0, :offence => 0}
-    if players      
-      players.each do |player|
-        if player[:status] == "ACTIVE"
-          scores[:points] += player[:points].to_i
-          scores[:quote] += player[:quote].to_i
-          scores[:defence] += player[:points].to_i if player[:position] == "defender" || player[:position] == "keeper"
-          scores[:offence] += player[:points].to_i if player[:position] == "striker"
-        end
+    return scores unless players      
+    players.each do |player|
+      if player[:status] == "ACTIVE"
+        scores[:points] += player[:points].to_i
+        scores[:quote] += player[:quote].to_i
+        scores[:defence] += player[:points].to_i if player[:position] == "defender" || player[:position] == "keeper"
+        scores[:offence] += player[:points].to_i if player[:position] == "striker"
       end
-      scores
-    else
-      0.to_i
-    end    
+    end
+    scores   
   end
   
   def calculateNorm clubs
@@ -93,10 +89,10 @@ class ResultCalculator
   
   def offenceValue defence, offence
     normValue = (@norm[:defence]-@norm[:offence])
-    return 0.to_i if normValue < 5 #Ab wann ist sind ausreichend Punkte vergeben worden?!
+    return 0.to_i if normValue < 2
     value = (defence-offence)
     value = 1 if value < 1
-    offenceValue = (normValue/value).round.abs
+    offenceValue = (normValue/value).abs
     offenceValue > 2 ? 2 : offenceValue
   end
   
@@ -111,8 +107,8 @@ class ResultCalculator
   end
   
   def verifyName name
-    return name if @club_comunio_ids.has_key?(name)
-    @club_comunio_ids.keys.each do |club|
+    return name if @club_comunio_ids_map.has_key?(name)
+    @club_comunio_ids_map.keys.each do |club|
       return club if club.include?(name) || club.include?(name[-6..-1])
     end
     raise "#{name} konnte nicht gefunden werden."
