@@ -1,6 +1,7 @@
 require 'net/http'
 require 'json'
-require_relative "result_calculator"
+
+require_relative "./lib/result_calculator"
 
 bot_token = "fwo9yv49o7sw74kjupgi3egv"
 
@@ -12,9 +13,11 @@ http = Net::HTTP.new('botliga.de',80)
 calculator = ResultCalculator.new
 
 matches.each do |match|
-  result = calculator.matchResult match['hostName'], match['guestName']
-  #puts "#{match['hostName']} - #{match['guestName']} #{result[0]}:#{result[1]}"
-  response, data = http.post('/api/guess',"match_id=#{match['id']}&result=#{result[0]}:#{result[1]}&token=#{bot_token}")
+  if match['hostGoals'].nil?
+    result = calculator.matchResult match['hostName'], match['guestName']
+    #puts "#{match['hostName']} - #{match['guestName']} #{result[0]}:#{result[1]}"
+    response, data = http.post('/api/guess',"match_id=#{match['id']}&result=#{result[0]}:#{result[1]}&token=#{bot_token}")
   
-  puts "#{response.code} #{data}" 
+    puts "#{response.code} #{data}" 
+  end
 end
